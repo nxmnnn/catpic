@@ -1,0 +1,8 @@
+catpic - Download random cat images from TheCatAPI
+
+Usage:
+  catpic                       → Download 1 cat pic to default folder
+  catpic /path/to/folder      → Download 1 cat pic to given folder
+  catpic -number N [folder]   → Download N cat pics (max 1000) to folder
+  catpic -df                  → Set default folder for downloads
+  catpic -h                   → Show this help message
