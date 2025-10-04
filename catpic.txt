@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# Default folder path (can be changed with -df)
+default_folder="$HOME/Pictures/catpics"
+mkdir -p "$default_folder"
+
+# Function to download a single cat pic silently and open it with feh
+download_cat_pic() {
+    local folder="$1"
+    local filename="$2"
+
+    # Get image URL (TheCatAPI usually serves high-quality images)
+    url=$(curl -s https://api.thecatapi.com/v1/images/search | jq -r '.[0].url')
+
+    echo "Downloading cat pic..."
+
+    # Full path
+    filepath="$folder/$filename"
+
+    # Download silently
+    wget -q "$url" -O "$filepath"
+
+    echo "Downloaded the cat pic to $folder"
+    echo "File saved as $filepath"
+
+    # Open with feh
+    if command -v feh &> /dev/null; then
+        feh -B black --auto-zoom --title "$filename" "$filepath" &
+    else
+        echo "feh not installed. Skipping preview. Install it with: sudo pacman -S feh"
+    fi
+}
+
+# Function to download multiple cat pics
+download_multiple() {
+    local num="$1"
+    local folder="$2"
+
+    echo "Downloading $num cat picture(s)..."
+
+    for ((i=1; i<=num; i++)); do
+        filename="catpic_$i.jpg"
+        download_cat_pic "$folder" "$filename"
+    done
+
+    echo "Done. Downloaded $num cat picture(s) to $folder"
+}
+
+# Set default folder interactively
+set_default_folder() {
+    echo "Enter the full path to your new default folder:"
+    read new_folder
+
+    if [ -n "$new_folder" ]; then
+        mkdir -p "$new_folder"
+        default_folder="$new_folder"
+        echo "Default folder set to: $default_folder"
+    else
+        echo "No folder entered. Keeping default: $default_folder"
+    fi
+}
+
+# Show help menu
+show_help() {
+    echo "catpic - Download random cat images from TheCatAPI"
+    echo
+    echo "Usage:"
+    echo "  catpic                       → Download 1 cat pic to default folder"
+    echo "  catpic /path/to/folder      → Download 1 cat pic to given folder"
+    echo "  catpic -number N [folder]   → Download N cat pics (max 1000) to folder"
+    echo "  catpic -df                  → Set default folder for downloads"
+    echo "  catpic -h                   → Show this help message"
+    echo
+}
+
+# Parse arguments
+case "$1" in
+    -h)
+        show_help
+        ;;
+    -df)
+        set_default_folder
+        ;;
+    -number)
+        if [ -z "$2" ]; then
+            echo "Please specify how many cat pics to download."
+            exit 1
+        fi
+
+        if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+            echo "Invalid number: $2"
+            exit 1
+        fi
+
+        if [ "$2" -gt 1000 ]; then
+            echo "Limit exceeded: You can only download up to 1000 images."
+            exit 1
+        fi
+
+        folder="${3:-$default_folder}"
+        mkdir -p "$folder"
+        download_multiple "$2" "$folder"
+        ;;
+    *)
+        folder="${1:-$default_folder}"
+        mkdir -p "$folder"
+
+        echo "Enter a custom name for the cat pic (default: catpic.jpg):"
+        read custom_name
+        custom_name="${custom_name:-catpic.jpg}"
+
+        download_cat_pic "$folder" "$custom_name"
+        ;;
+esac
