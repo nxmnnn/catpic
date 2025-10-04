@@ -1,0 +1,7 @@
+First go to catpic.txt and copy everything. Then goto terminal and type these commands
+
+nano ~/catpic
+chmod +x ~/catpic
+sudo mv ~/catpic /usr/local/bin/catpic
+
+Then just run catpic and that's it!
